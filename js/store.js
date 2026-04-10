@@ -12,6 +12,13 @@ App.Store = (function() {
     localStorage.setItem(PREFIX + key, JSON.stringify(val));
   }
 
+  // Firebase同期トリガー
+  function _sync() {
+    if (App.Firebase && App.Firebase.syncAfterSave) {
+      App.Firebase.syncAfterSave();
+    }
+  }
+
   // --- UUID ---
   function uuid() {
     if (crypto.randomUUID) return crypto.randomUUID();
@@ -34,6 +41,7 @@ App.Store = (function() {
     var idx = types.findIndex(function(x) { return x.id === t.id; });
     if (idx >= 0) types[idx] = t; else types.push(t);
     _set('types', types);
+    _sync();
     return t;
   }
   function deleteType(id) {
@@ -45,6 +53,7 @@ App.Store = (function() {
       p.typeIds = p.typeIds.map(function(tid) { return tid === id ? null : tid; });
     });
     _set('parties', parties);
+    _sync();
   }
   function getTypeById(id) {
     return getTypes().find(function(x) { return x.id === id; }) || null;
@@ -63,10 +72,12 @@ App.Store = (function() {
     var idx = parties.findIndex(function(x) { return x.id === p.id; });
     if (idx >= 0) parties[idx] = p; else parties.push(p);
     _set('parties', parties);
+    _sync();
     return p;
   }
   function deleteParty(id) {
     _set('parties', getParties().filter(function(x) { return x.id !== id; }));
+    _sync();
   }
   function getPartyById(id) {
     return getParties().find(function(x) { return x.id === id; }) || null;
@@ -91,11 +102,11 @@ App.Store = (function() {
     if (!s.candidateCount) s.candidateCount = DEFAULT_SETTINGS.candidateCount;
     return s;
   }
-  function saveSettings(s) { _set('settings', s); }
+  function saveSettings(s) { _set('settings', s); _sync(); }
 
   // --- ユーザー略称 ---
   function getUserAbbreviations() { return _get('abbrev.user') || []; }
-  function saveUserAbbreviations(list) { _set('abbrev.user', list); }
+  function saveUserAbbreviations(list) { _set('abbrev.user', list); _sync(); }
 
   // --- バックアップ ---
   function exportAll() {

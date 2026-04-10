@@ -555,6 +555,41 @@ a:hover { text-decoration: underline; }
 .abbr-add .poke-input-wrapper { flex: 1; }
 .help-text { font-size: 0.8rem; color: var(--text2); margin: 6px 0; }
 
+/* --- ログイン/認証 --- */
+.auth-area {
+  margin-bottom: 16px;
+  text-align: center;
+}
+.auth-logged-in {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.auth-user {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.auth-sync {
+  font-size: 0.8rem;
+  color: var(--green);
+}
+.auth-logged-out {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.auth-msg {
+  font-size: 0.85rem;
+  color: var(--text2);
+}
+.btn-login {
+  padding: 10px 24px;
+  font-size: 0.95rem;
+}
+
 /* --- レスポンシブ --- */
 @media (max-width: 480px) {
   #app { padding: 8px; }

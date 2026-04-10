@@ -2,6 +2,9 @@
  * アプリ初期化・ルーティング設定
  * ======================================== */
 document.addEventListener('DOMContentLoaded', function() {
+  // Firebase 初期化
+  App.Firebase.init();
+
   // 検索インデックス構築
   App.Search.buildIndex();
 
