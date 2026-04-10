@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -R \"C:/Users/sfuruta/Desktop/poke\" --ignore=node_modules --ignore=data/*.json)"
+    ]
+  }
+}
