@@ -6,6 +6,7 @@ App.Firebase = (function() {
   var auth = null;
   var currentUser = null;
   var _onAuthChangeCallbacks = [];
+  var _syncStatus = ''; // 画面表示用
 
   var firebaseConfig = {
     apiKey: "AIzaSyAErzHcU2oMB7hiGCN-n3KKQiygjgzB3lA",
@@ -22,7 +23,7 @@ App.Firebase = (function() {
       auth = firebase.auth();
       db = firebase.firestore();
 
-      // 認証をブラウザに永続化（デフォルトだが明示的に）
+      // 認証をブラウザに永続化
       auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
       // オフラインキャッシュ有効化
@@ -33,11 +34,7 @@ App.Firebase = (function() {
       // 認証状態の監視
       auth.onAuthStateChanged(function(user) {
         currentUser = user;
-        console.log('Auth state changed:', user ? user.displayName : 'logged out');
         _onAuthChangeCallbacks.forEach(function(cb) { cb(user); });
-        if (user) {
-          pullFromCloud();
-        }
       });
     } catch(e) {
       console.warn('Firebase init failed:', e);
@@ -46,7 +43,6 @@ App.Firebase = (function() {
 
   function onAuthChange(callback) {
     _onAuthChangeCallbacks.push(callback);
-    // 既にログイン済みの場合は即コールバック
     if (currentUser) callback(currentUser);
   }
 
@@ -63,6 +59,7 @@ App.Firebase = (function() {
 
   function getUser() { return currentUser; }
   function isLoggedIn() { return !!currentUser; }
+  function getSyncStatus() { return _syncStatus; }
 
   // --- Firestore 同期 ---
   function userDoc() {
@@ -70,80 +67,64 @@ App.Firebase = (function() {
     return db.collection('users').doc(currentUser.uid);
   }
 
-  // ローカルの最終同期時刻を管理
-  function getLocalSyncTime() {
-    try { return localStorage.getItem('poke.lastSyncAt') || ''; }
-    catch(e) { return ''; }
-  }
-  function setLocalSyncTime(time) {
-    try { localStorage.setItem('poke.lastSyncAt', time); }
-    catch(e) {}
-  }
-
-  // ローカル → クラウドに保存
+  /**
+   * ローカル → クラウドに保存（保存のたびに自動実行）
+   */
   function pushToCloud() {
     var doc = userDoc();
     if (!doc) return Promise.resolve();
 
     var data = App.Store.exportAll();
-    var now = new Date().toISOString();
-    data.lastSyncAt = now;
+    data.lastSyncAt = new Date().toISOString();
+    _syncStatus = '同期中...';
 
     return doc.set(data).then(function() {
-      setLocalSyncTime(now);
-      console.log('Pushed to cloud at', now);
+      _syncStatus = '同期済み (' + new Date().toLocaleTimeString() + ')';
+      console.log('Pushed to cloud');
     }).catch(function(err) {
+      _syncStatus = '同期失敗: ' + err.message;
       console.error('Push failed:', err);
     });
   }
 
-  // クラウド → ローカルに取得
+  /**
+   * クラウド → ローカルに取得（手動 or 新デバイスのみ）
+   * ローカルデータを上書きするので注意
+   */
   function pullFromCloud() {
     var doc = userDoc();
-    if (!doc) return Promise.resolve();
+    if (!doc) return Promise.reject('Not logged in');
+
+    _syncStatus = 'クラウドから取得中...';
 
     return doc.get().then(function(snapshot) {
       if (!snapshot.exists) {
-        // クラウドにデータがない → ローカルデータをpush
-        console.log('No cloud data found, pushing local...');
-        return pushToCloud();
+        _syncStatus = 'クラウドにデータなし';
+        return { success: false, message: 'クラウドにデータがありません' };
       }
 
       var cloudData = snapshot.data();
-      var cloudTime = cloudData.lastSyncAt || '';
-      var localTime = getLocalSyncTime();
-
-      console.log('Cloud sync time:', cloudTime);
-      console.log('Local sync time:', localTime);
-
-      if (cloudTime && cloudTime > localTime) {
-        console.log('Cloud is newer, pulling...');
-        App.Store.importAll(cloudData);
-        setLocalSyncTime(cloudTime);
-        App.Search.buildIndex();
-        // 現在の画面を再描画
-        var hash = window.location.hash || '#/';
-        App.Router.navigate(hash);
-      } else if (!localTime && !cloudTime) {
-        // 両方空 → ローカルをpush
-        console.log('Both empty, pushing local...');
-        return pushToCloud();
-      } else {
-        console.log('Local is newer or same, pushing...');
-        return pushToCloud();
-      }
+      App.Store.importAll(cloudData);
+      App.Search.buildIndex();
+      _syncStatus = '取得完了 (' + new Date().toLocaleTimeString() + ')';
+      console.log('Pulled from cloud');
+      return { success: true, message: '取得完了' };
     }).catch(function(err) {
+      _syncStatus = '取得失敗: ' + err.message;
       console.error('Pull failed:', err);
+      return { success: false, message: err.message };
     });
   }
 
-  // 自動同期: 保存操作のたびにクラウドへ
+  /**
+   * 自動同期: 保存操作のたびにクラウドへpush
+   */
   function syncAfterSave() {
     if (isLoggedIn()) {
       clearTimeout(syncAfterSave._timer);
       syncAfterSave._timer = setTimeout(function() {
         pushToCloud();
-      }, 1000);
+      }, 500);
     }
   }
 
@@ -153,6 +134,7 @@ App.Firebase = (function() {
     logout: logout,
     getUser: getUser,
     isLoggedIn: isLoggedIn,
+    getSyncStatus: getSyncStatus,
     onAuthChange: onAuthChange,
     pushToCloud: pushToCloud,
     pullFromCloud: pullFromCloud,

@@ -590,6 +590,25 @@ a:hover { text-decoration: underline; }
   font-size: 0.95rem;
 }
 
+/* --- 同期ボタン --- */
+.sync-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.btn-sync {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+.sync-status {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text2);
+  margin-top: 6px;
+  min-height: 1.2em;
+}
+
 /* --- レスポンシブ --- */
 @media (max-width: 480px) {
   #app { padding: 8px; }

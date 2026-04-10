@@ -19,9 +19,14 @@ App.Views.Home = (function() {
           (user
             ? '<div class="auth-logged-in">' +
                 '<span class="auth-user">' + esc(user.displayName || user.email) + '</span>' +
-                '<span class="auth-sync">&#9989; 同期ON</span>' +
+                '<span class="auth-sync">&#9989; ログイン中</span>' +
                 '<button id="btnLogout" class="btn-sm">ログアウト</button>' +
-              '</div>'
+              '</div>' +
+              '<div class="sync-actions">' +
+                '<button id="btnPush" class="btn-sm btn-sync">&#9650; クラウドに保存</button>' +
+                '<button id="btnPull" class="btn-sm btn-sync">&#9660; クラウドから取得</button>' +
+              '</div>' +
+              '<div id="syncStatus" class="sync-status">' + esc(App.Firebase.getSyncStatus()) + '</div>'
             : '<div class="auth-logged-out">' +
                 '<span class="auth-msg">ログインでPC&#8596;スマホ同期</span>' +
                 '<button id="btnLogin" class="btn-primary btn-login">Googleでログイン</button>' +
@@ -81,6 +86,40 @@ App.Views.Home = (function() {
       btnLogout.addEventListener('click', function() {
         App.Firebase.logout().then(function() {
           render(container);
+        });
+      });
+    }
+
+    // クラウドに保存
+    var btnPush = document.getElementById('btnPush');
+    if (btnPush) {
+      btnPush.addEventListener('click', function() {
+        btnPush.disabled = true;
+        btnPush.textContent = '保存中...';
+        App.Firebase.pushToCloud().then(function() {
+          document.getElementById('syncStatus').textContent = App.Firebase.getSyncStatus();
+          btnPush.disabled = false;
+          btnPush.textContent = '\u25B2 クラウドに保存';
+        });
+      });
+    }
+
+    // クラウドから取得
+    var btnPull = document.getElementById('btnPull');
+    if (btnPull) {
+      btnPull.addEventListener('click', function() {
+        if (!confirm('クラウドのデータでローカルを上書きします。よろしいですか？')) return;
+        btnPull.disabled = true;
+        btnPull.textContent = '取得中...';
+        App.Firebase.pullFromCloud().then(function(result) {
+          document.getElementById('syncStatus').textContent = App.Firebase.getSyncStatus();
+          btnPull.disabled = false;
+          btnPull.textContent = '\u25BC クラウドから取得';
+          if (result && result.success) {
+            render(container); // データ反映のため再描画
+          } else {
+            alert(result ? result.message : '取得に失敗しました');
+          }
         });
       });
     }
