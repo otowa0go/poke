@@ -5,7 +5,7 @@ App.Firebase = (function() {
   var db = null;
   var auth = null;
   var currentUser = null;
-  var _onAuthChange = null;
+  var _onAuthChangeCallbacks = [];
 
   var firebaseConfig = {
     apiKey: "AIzaSyAErzHcU2oMB7hiGCN-n3KKQiygjgzB3lA",
@@ -22,6 +22,9 @@ App.Firebase = (function() {
       auth = firebase.auth();
       db = firebase.firestore();
 
+      // 認証をブラウザに永続化（デフォルトだが明示的に）
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
       // オフラインキャッシュ有効化
       db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
         console.warn('Firestore persistence:', err.code);
@@ -30,9 +33,9 @@ App.Firebase = (function() {
       // 認証状態の監視
       auth.onAuthStateChanged(function(user) {
         currentUser = user;
-        if (_onAuthChange) _onAuthChange(user);
+        console.log('Auth state changed:', user ? user.displayName : 'logged out');
+        _onAuthChangeCallbacks.forEach(function(cb) { cb(user); });
         if (user) {
-          console.log('Logged in:', user.displayName);
           pullFromCloud();
         }
       });
@@ -42,7 +45,7 @@ App.Firebase = (function() {
   }
 
   function onAuthChange(callback) {
-    _onAuthChange = callback;
+    _onAuthChangeCallbacks.push(callback);
     // 既にログイン済みの場合は即コールバック
     if (currentUser) callback(currentUser);
   }
@@ -67,16 +70,28 @@ App.Firebase = (function() {
     return db.collection('users').doc(currentUser.uid);
   }
 
+  // ローカルの最終同期時刻を管理
+  function getLocalSyncTime() {
+    try { return localStorage.getItem('poke.lastSyncAt') || ''; }
+    catch(e) { return ''; }
+  }
+  function setLocalSyncTime(time) {
+    try { localStorage.setItem('poke.lastSyncAt', time); }
+    catch(e) {}
+  }
+
   // ローカル → クラウドに保存
   function pushToCloud() {
     var doc = userDoc();
     if (!doc) return Promise.resolve();
 
     var data = App.Store.exportAll();
-    data.lastSyncAt = new Date().toISOString();
+    var now = new Date().toISOString();
+    data.lastSyncAt = now;
 
-    return doc.set(data, { merge: true }).then(function() {
-      console.log('Pushed to cloud');
+    return doc.set(data).then(function() {
+      setLocalSyncTime(now);
+      console.log('Pushed to cloud at', now);
     }).catch(function(err) {
       console.error('Push failed:', err);
     });
@@ -90,25 +105,29 @@ App.Firebase = (function() {
     return doc.get().then(function(snapshot) {
       if (!snapshot.exists) {
         // クラウドにデータがない → ローカルデータをpush
-        console.log('No cloud data, pushing local...');
+        console.log('No cloud data found, pushing local...');
         return pushToCloud();
       }
 
       var cloudData = snapshot.data();
-      var localData = App.Store.exportAll();
-
-      // タイムスタンプ比較: クラウドの方が新しければ取り込む
       var cloudTime = cloudData.lastSyncAt || '';
-      var localTime = localData.exportedAt || '';
+      var localTime = getLocalSyncTime();
 
-      if (cloudTime > localTime) {
+      console.log('Cloud sync time:', cloudTime);
+      console.log('Local sync time:', localTime);
+
+      if (cloudTime && cloudTime > localTime) {
         console.log('Cloud is newer, pulling...');
         App.Store.importAll(cloudData);
+        setLocalSyncTime(cloudTime);
         App.Search.buildIndex();
-        // 画面リフレッシュ
-        if (window.location.hash) {
-          App.Router.navigate(window.location.hash);
-        }
+        // 現在の画面を再描画
+        var hash = window.location.hash || '#/';
+        App.Router.navigate(hash);
+      } else if (!localTime && !cloudTime) {
+        // 両方空 → ローカルをpush
+        console.log('Both empty, pushing local...');
+        return pushToCloud();
       } else {
         console.log('Local is newer or same, pushing...');
         return pushToCloud();
@@ -121,7 +140,6 @@ App.Firebase = (function() {
   // 自動同期: 保存操作のたびにクラウドへ
   function syncAfterSave() {
     if (isLoggedIn()) {
-      // 少し遅延させて連続保存を束ねる
       clearTimeout(syncAfterSave._timer);
       syncAfterSave._timer = setTimeout(function() {
         pushToCloud();

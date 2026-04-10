@@ -18,5 +18,14 @@ document.addEventListener('DOMContentLoaded', function() {
   App.Router.register('#/settings', App.Views.Settings.render);
 
   // ルーター起動
-  App.Router.start(document.getElementById('app'));
+  var appEl = document.getElementById('app');
+  App.Router.start(appEl);
+
+  // 認証状態が復元されたらホーム画面を再描画（ログインボタン更新）
+  App.Firebase.onAuthChange(function() {
+    var hash = window.location.hash || '#/';
+    if (hash === '#/') {
+      App.Views.Home.render(appEl);
+    }
+  });
 });
