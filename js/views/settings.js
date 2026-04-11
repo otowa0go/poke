@@ -321,10 +321,25 @@ App.Views.Settings = (function() {
           var names = [];
           if (Array.isArray(data)) {
             if (typeof data[0] === 'string') {
+              // 形式A: ["ポケモン名", ...]
               names = data;
-            } else if (data[0] && data[0].name) {
-              data.sort(function(a, b) { return a.rank - b.rank; });
-              names = data.map(function(d) { return d.name; });
+            } else if (data[0] && (data[0].name !== undefined || data[0].rank !== undefined)) {
+              // 形式B: [{rank, name, ...}] (ALTEMA抽出形式)
+              // ゴミデータ除去: rankが数値文字列、nameが存在、nameが"拡大する"等でない
+              var seen = {};
+              var cleaned = [];
+              data.forEach(function(d) {
+                var r = parseInt(d.rank, 10);
+                var n = (d.name || '').trim();
+                if (!r || !n) return;                  // rankが数値でない or nameなし
+                if (n === '拡大する') return;           // ゴミ
+                if (/[位～]/.test(d.rank)) return;      // "1位～5位" 等
+                if (seen[r]) return;                    // 重複（最初の出現を使う）
+                seen[r] = true;
+                cleaned.push({ rank: r, name: n });
+              });
+              cleaned.sort(function(a, b) { return a.rank - b.rank; });
+              names = cleaned.map(function(d) { return d.name; });
             } else {
               throw new Error('形式が不正です');
             }
