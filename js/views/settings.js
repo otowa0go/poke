@@ -347,11 +347,33 @@ App.Views.Settings = (function() {
             throw new Error('配列形式のJSONが必要です');
           }
 
+          // ALTEMA表記 → data.js表記 の変換テーブル
+          var RANK_ALIASES = {
+            'ウォッシュロトム':   'ロトム (ウォッシュロトム)',
+            'ヒートロトム':       'ロトム (ヒートロトム)',
+            'フロストロトム':     'ロトム (フロストロトム)',
+            'スピンロトム':       'ロトム (スピンロトム)',
+            'カットロトム':       'ロトム (カットロトム)',
+            'イダイトウ♂':       'イダイトウ (オスのすがた)',
+            'イダイトウ♀':       'イダイトウ (メスのすがた)',
+            'アローラキュウコン': 'キュウコン (アローラのすがた)',
+            'アローラライチュウ': 'ライチュウ (アローラのすがた)',
+            'アローラナッシー':   'ナッシー (アローラのすがた)',
+            'アローラサンドパン': 'サンドパン (アローラのすがた)',
+            'アローラキュウコン': 'キュウコン (アローラのすがた)',
+            'アローラロコン':     'ロコン (アローラのすがた)',
+            'アローラガラガラ':   'ガラガラ (アローラのすがた)',
+            'ヒスイダイケンキ':   'ダイケンキ (ヒスイのすがた)',
+            'ヒスイバクフーン':   'バクフーン (ヒスイのすがた)',
+            'ヒスイジュナイパー': 'ジュナイパー (ヒスイのすがた)',
+          };
+
           var rankObj = {};
           var matched = 0;
           var notFound = [];
           names.forEach(function(name, idx) {
-            var found = App.POKEMON.find(function(p) { return p.ja === name; });
+            var lookupName = RANK_ALIASES[name] || name;
+            var found = App.POKEMON.find(function(p) { return p.ja === lookupName; });
             if (found) {
               rankObj[found.id] = idx + 1;
               matched++;
