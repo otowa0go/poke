@@ -482,7 +482,7 @@ App.POKEMON = [
   {id:476,en:"Probopass",ja:"ダイノーズ"},
   {id:477,en:"Dusknoir",ja:"ヨノワール"},
   {id:478,en:"Froslass",ja:"ユキメノコ"},
-  {id:479,en:"Rotom",ja:"ロトム"},
+  {id:479,en:"Rotom",ja:"ロトム (ロトムのすがた)"},
   {id:480,en:"Uxie",ja:"ユクシー"},
   {id:481,en:"Mesprit",ja:"エムリット"},
   {id:482,en:"Azelf",ja:"アグノム"},
@@ -681,7 +681,7 @@ App.POKEMON = [
   {id:675,en:"Pangoro",ja:"ゴロンダ"},
   {id:676,en:"Furfrou",ja:"トリミアン"},
   {id:677,en:"Espurr",ja:"ニャスパー"},
-  {id:678,en:"Meowstic",ja:"ニャオニクス"},
+  {id:678,en:"Meowstic",ja:"ニャオニクス (オスのすがた)"},
   {id:679,en:"Honedge",ja:"ヒトツキ"},
   {id:680,en:"Doublade",ja:"ニダンギル"},
   {id:681,en:"Aegislash",ja:"ギルガルド"},
@@ -714,7 +714,7 @@ App.POKEMON = [
   {id:708,en:"Phantump",ja:"ボクレー"},
   {id:709,en:"Trevenant",ja:"オーロット"},
   {id:710,en:"Pumpkaboo",ja:"バケッチャ"},
-  {id:711,en:"Gourgeist",ja:"パンプジン"},
+  {id:711,en:"Gourgeist",ja:"パンプジン (ちゅうだましゅ)"},
   {id:712,en:"Bergmite",ja:"カチコール"},
   {id:713,en:"Avalugg",ja:"クレベース"},
   {id:714,en:"Noibat",ja:"オンバット"},
@@ -748,7 +748,7 @@ App.POKEMON = [
   {id:742,en:"Cutiefly",ja:"アブリー"},
   {id:743,en:"Ribombee",ja:"アブリボン"},
   {id:744,en:"Rockruff",ja:"イワンコ"},
-  {id:745,en:"Lycanroc",ja:"ルガルガン"},
+  {id:745,en:"Lycanroc",ja:"ルガルガン (まひるのすがた)"},
   {id:746,en:"Wishiwashi",ja:"ヨワシ"},
   {id:747,en:"Mareanie",ja:"ヒドイデ"},
   {id:748,en:"Toxapex",ja:"ドヒドイデ"},
@@ -905,7 +905,7 @@ App.POKEMON = [
   {id:899,en:"Wyrdeer",ja:"アヤシシ"},
   {id:900,en:"Kleavor",ja:"バサギリ"},
   {id:901,en:"Ursaluna",ja:"ガチグマ"},
-  {id:902,en:"Basculegion",ja:"イダイトウ"},
+  {id:902,en:"Basculegion",ja:"イダイトウ (オスのすがた)"},
   {id:903,en:"Sneasler",ja:"オオニューラ"},
   {id:904,en:"Overqwil",ja:"ハリーマン"},
   {id:905,en:"Enamorus",ja:"ラブトロス"},
@@ -1028,7 +1028,34 @@ App.POKEMON = [
   {id:1022,en:"Iron Boulder",ja:"テツノイワオ"},
   {id:1023,en:"Iron Crown",ja:"テツノカシラ"},
   {id:1024,en:"Terapagos",ja:"テラパゴス"},
-  {id:1025,en:"Pecharunt",ja:"モモワロウ"}
+  {id:1025,en:"Pecharunt",ja:"モモワロウ"},
+  {id:10008,en:"rotom-heat",ja:"ロトム (ヒートロトム)"},
+  {id:10009,en:"rotom-wash",ja:"ロトム (ウォッシュロトム)"},
+  {id:10010,en:"rotom-frost",ja:"ロトム (フロストロトム)"},
+  {id:10011,en:"rotom-fan",ja:"ロトム (スピンロトム)"},
+  {id:10012,en:"rotom-mow",ja:"ロトム (カットロトム)"},
+  {id:10025,en:"meowstic-female",ja:"ニャオニクス (メスのすがた)"},
+  {id:10030,en:"gourgeist-small",ja:"パンプジン (こだましゅ)"},
+  {id:10031,en:"gourgeist-large",ja:"パンプジン (おおだましゅ)"},
+  {id:10032,en:"gourgeist-super",ja:"パンプジン (ギガだましゅ)"},
+  {id:10100,en:"raichu-alola",ja:"ライチュウ (アローラのすがた)"},
+  {id:10104,en:"ninetales-alola",ja:"キュウコン (アローラのすがた)"},
+  {id:10126,en:"lycanroc-midnight",ja:"ルガルガン (まよなかのすがた)"},
+  {id:10152,en:"lycanroc-dusk",ja:"ルガルガン (たそがれのすがた)"},
+  {id:10165,en:"slowbro-galar",ja:"ヤドラン (ガラルのすがた)"},
+  {id:10172,en:"slowking-galar",ja:"ヤドキング (ガラルのすがた)"},
+  {id:10180,en:"stunfisk-galar",ja:"マッギョ (ガラルのすがた)"},
+  {id:10230,en:"arcanine-hisui",ja:"ウインディ (ヒスイのすがた)"},
+  {id:10233,en:"typhlosion-hisui",ja:"バクフーン (ヒスイのすがた)"},
+  {id:10236,en:"samurott-hisui",ja:"ダイケンキ (ヒスイのすがた)"},
+  {id:10239,en:"zoroark-hisui",ja:"ゾロアーク (ヒスイのすがた)"},
+  {id:10242,en:"goodra-hisui",ja:"ヌメルゴン (ヒスイのすがた)"},
+  {id:10243,en:"avalugg-hisui",ja:"クレベース (ヒスイのすがた)"},
+  {id:10244,en:"decidueye-hisui",ja:"ジュナイパー (ヒスイのすがた)"},
+  {id:10248,en:"basculegion-female",ja:"イダイトウ (メスのすがた)"},
+  {id:10250,en:"tauros-paldea-combat-breed",ja:"ケンタロス (パルデアのすがた・コンバットしゅ)"},
+  {id:10251,en:"tauros-paldea-blaze-breed",ja:"ケンタロス (パルデアのすがた・ブレイズしゅ)"},
+  {id:10252,en:"tauros-paldea-aqua-breed",ja:"ケンタロス (パルデアのすがた・ウォーターしゅ)"}
 ];
 
 App.ABBREVIATIONS = [
@@ -1123,3 +1150,18 @@ App.NATURES = [
 // ポケモンIDから素早く引けるマップ
 App.POKEMON_MAP = {};
 App.POKEMON.forEach(function(p) { App.POKEMON_MAP[p.id] = p; });
+
+// 使用率ランキング（ALTEMA TOP50 2026-04-10時点）
+// IDをキー、順位を値。未ランクは999扱い
+App.USAGE_RANK = {
+  445:1,6:2,730:3,450:4,1018:5,
+  823:6,778:7,983:8,94:9,635:10,
+  908:11,681:12,428:13,10009:14,970:15,
+  149:16,655:17,212:18,130:19,658:20,
+  154:21,902:22,3:23,248:24,903:25,
+  887:26,10008:27,115:28,448:29,637:30,
+  184:31,121:32,143:33,748:34,36:35,
+  956:36,670:37,473:38,530:39,279:40,
+  700:41,227:42,9:43,197:44,911:45,
+  478:46,10104:47,10236:48,964:49,547:50
+};
