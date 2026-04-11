@@ -609,6 +609,75 @@ a:hover { text-decoration: underline; }
   min-height: 1.2em;
 }
 
+/* --- カバレッジパネル --- */
+.coverage-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.coverage-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.coverage-stats {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--text2);
+  margin-left: 8px;
+}
+.cov-ok-text { color: var(--green); }
+.cov-none-text { color: var(--red); }
+.coverage-empty {
+  font-size: 0.8rem;
+  color: var(--text2);
+  text-align: center;
+  padding: 8px 0;
+}
+.coverage-group { margin-bottom: 8px; }
+.coverage-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  cursor: pointer;
+  list-style: none;
+  padding: 0;
+}
+.coverage-group-label::-webkit-details-marker { display: none; }
+.cov-none-label { color: var(--red); }
+.cov-partial-label { color: var(--yellow); }
+.cov-ok-label { color: var(--green); }
+.coverage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 4px;
+}
+.coverage-chip {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.chip-none {
+  background: rgba(231,76,60,0.2);
+  border: 1px solid var(--red);
+  color: var(--text);
+}
+.chip-partial {
+  background: rgba(232,200,64,0.15);
+  border: 1px solid var(--yellow);
+  color: var(--text);
+}
+.chip-ok {
+  background: rgba(46,204,113,0.1);
+  border: 1px solid var(--green);
+  color: var(--text2);
+}
+
 /* --- レスポンシブ --- */
 @media (max-width: 480px) {
   #app { padding: 8px; }
