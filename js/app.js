@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Firebase 初期化
   App.Firebase.init();
 
+  // ストレージに保存済みの使用率ランキングがあれば上書き適用
+  var storedRank = App.Store.getUsageRank();
+  if (storedRank) App.USAGE_RANK = storedRank;
+
   // 検索インデックス構築
   App.Search.buildIndex();
 

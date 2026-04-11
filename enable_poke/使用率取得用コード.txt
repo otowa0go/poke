@@ -1,0 +1,55 @@
+// ========================================
+// ALTEMA 使用率ランキング抽出スクリプト
+// ========================================
+// 使い方:
+// 1. ALTEMAのポケモンチャンピオンズ 使用率ランキングページを開く
+// 2. ブラウザのconsole (F12) に以下を貼り付けて実行
+// 3. 出力されたJSONをファイルに保存
+// 4. 設定画面 → 使用率ランキング → JSONファイルを選択 でインポート
+// ========================================
+
+// --- 方式1: テーブル形式のページ用 ---
+(function() {
+  // ランキングテーブルの行を取得（ALTEMAのHTML構造に合わせて調整）
+  // 例: <td class="pokemon_name">ガブリアス</td>
+  var rows = document.querySelectorAll('table tr');
+  var result = [];
+  rows.forEach(function(row) {
+    var nameCells = row.querySelectorAll('td');
+    if (nameCells.length === 0) return;
+    // ポケモン名が含まれているセルを探す（構造に合わせて変更）
+    var name = (nameCells[1] || nameCells[0]).textContent.trim();
+    if (name) result.push(name);
+  });
+  console.log(JSON.stringify(result, null, 2));
+  console.log('count:', result.length);
+})();
+
+// --- 方式2: リスト形式のページ用 ---
+(function() {
+  // ランキングリストのポケモン名要素を取得（セレクタは要調整）
+  var items = document.querySelectorAll('.rankList .pokemon_name, .rank_list li .name');
+  var result = Array.from(items).map(function(el) {
+    return el.textContent.trim();
+  });
+  console.log(JSON.stringify(result, null, 2));
+  console.log('count:', result.length);
+})();
+
+// ========================================
+// 出力形式（どちらの方式も同じ）:
+// ["ガブリアス", "カイリュー", "ドラパルト", ...]
+// ※ 配列のインデックス順が順位になります (0番目 = 1位)
+// ========================================
+
+// --- 手動入力用テンプレート ---
+// 上記スクリプトがうまく動かない場合、ページを見ながら手動で並べてください
+/*
+var result = [
+  "1位のポケモン名",
+  "2位のポケモン名",
+  "3位のポケモン名",
+  // ...
+];
+console.log(JSON.stringify(result, null, 2));
+*/

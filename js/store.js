@@ -124,6 +124,12 @@ App.Store = (function() {
     return App.POKEMON.filter(function(p) { return idSet[p.id]; });
   }
 
+  // --- 使用率ランキング ---
+  function getUsageRank() {
+    return _get('usageRank') || null;
+  }
+  function saveUsageRank(rankObj) { _set('usageRank', rankObj); _sync(); }
+
   // --- バックアップ ---
   function exportAll() {
     return {
@@ -151,6 +157,7 @@ App.Store = (function() {
     getUserAbbreviations: getUserAbbreviations, saveUserAbbreviations: saveUserAbbreviations,
     getEnabledIds: getEnabledIds, saveEnabledIds: saveEnabledIds, getEnabledPokemon: getEnabledPokemon,
     DEFAULT_ENABLED_IDS: DEFAULT_ENABLED_IDS,
+    getUsageRank: getUsageRank, saveUsageRank: saveUsageRank,
     exportAll: exportAll, importAll: importAll
   };
 })();

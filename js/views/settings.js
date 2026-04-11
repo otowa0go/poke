@@ -83,6 +83,19 @@ App.Views.Settings = (function() {
           '</details>' +
         '</div>' +
 
+        // 使用率ランキング
+        '<div class="form-section">' +
+          '<h3>使用率ランキング</h3>' +
+          '<p class="help-text">ALTEMAのページでconsoleスクリプトを実行して抽出したJSONをインポートします</p>' +
+          '<p class="help-text">抽出コード: <code>enable_poke/使用率取得用コード.txt</code></p>' +
+          '<div class="form-actions">' +
+            '<button id="btnImportRank" class="btn-primary">JSONファイルを選択</button>' +
+            '<button id="btnResetRank" class="btn-secondary">デフォルトに戻す</button>' +
+            '<input type="file" id="fileImportRank" accept=".json" style="display:none">' +
+          '</div>' +
+          '<p id="importRankResult" class="help-text"></p>' +
+        '</div>' +
+
         // バックアップ
         '<div class="form-section">' +
           '<h3>データ管理</h3>' +
@@ -291,6 +304,82 @@ App.Views.Settings = (function() {
     }
     document.getElementById('btnImportListOverwrite').addEventListener('click', function() { doTextImport(false); });
     document.getElementById('btnImportListAdd').addEventListener('click', function() { doTextImport(true); });
+
+    // 使用率ランキングインポート
+    document.getElementById('btnImportRank').addEventListener('click', function() {
+      document.getElementById('fileImportRank').click();
+    });
+    document.getElementById('fileImportRank').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          var data = JSON.parse(ev.target.result);
+          // 形式A: ["ポケモン名", ...] (順位順の配列)
+          // 形式B: [{rank, name}, ...] (オブジェクト配列)
+          var names = [];
+          if (Array.isArray(data)) {
+            if (typeof data[0] === 'string') {
+              names = data;
+            } else if (data[0] && data[0].name) {
+              data.sort(function(a, b) { return a.rank - b.rank; });
+              names = data.map(function(d) { return d.name; });
+            } else {
+              throw new Error('形式が不正です');
+            }
+          } else {
+            throw new Error('配列形式のJSONが必要です');
+          }
+
+          var rankObj = {};
+          var matched = 0;
+          var notFound = [];
+          names.forEach(function(name, idx) {
+            var found = App.POKEMON.find(function(p) { return p.ja === name; });
+            if (found) {
+              rankObj[found.id] = idx + 1;
+              matched++;
+            } else {
+              notFound.push(name);
+            }
+          });
+
+          var resultEl = document.getElementById('importRankResult');
+          if (matched === 0) {
+            resultEl.textContent = 'マッチするポケモンが見つかりませんでした。';
+            e.target.value = '';
+            return;
+          }
+
+          var msg = names.length + '件中 ' + matched + '匹をマッチ。';
+          if (notFound.length > 0) {
+            msg += ' 未マッチ: ' + notFound.slice(0, 5).join('、') + (notFound.length > 5 ? '…他' + (notFound.length - 5) + '件' : '');
+          }
+
+          if (confirm(matched + '匹のランキングを上書き保存します。よろしいですか？')) {
+            App.Store.saveUsageRank(rankObj);
+            App.USAGE_RANK = rankObj;
+            resultEl.textContent = msg + ' → 保存しました。';
+          }
+          e.target.value = '';
+        } catch(err) {
+          document.getElementById('importRankResult').textContent = 'JSONの読み込みに失敗: ' + err.message;
+          e.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('btnResetRank').addEventListener('click', function() {
+      if (confirm('使用率ランキングをデフォルト（data.js記載のもの）に戻しますか？')) {
+        App.Store.saveUsageRank(null);
+        // localStorageのキーを直接削除してデフォルトに戻す
+        localStorage.removeItem('poke.usageRank');
+        // data.jsのデフォルト値を再読込
+        location.reload();
+      }
+    });
 
     // バックアップ
     document.getElementById('btnExport').addEventListener('click', function() {
