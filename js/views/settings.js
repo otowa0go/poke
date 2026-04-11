@@ -65,10 +65,18 @@ App.Views.Settings = (function() {
             '<button id="btnExportList" class="btn-secondary">リストをエクスポート</button>' +
             '<button id="btnResetList" class="btn-secondary">デフォルトに戻す</button>' +
           '</div>' +
-          '<p class="help-text" style="margin-top:12px">新しいリストをインポート（1行1ポケモン、英語名 or 日本語名）</p>' +
+          '<p class="help-text" style="margin-top:12px">JSONファイルからインポート（Champions console抽出形式）</p>' +
+          '<div class="form-actions">' +
+            '<button id="btnImportJson" class="btn-primary">JSONファイルを選択</button>' +
+            '<input type="file" id="fileImportJson" accept=".json" style="display:none">' +
+          '</div>' +
+          '<p id="importJsonResult" class="help-text"></p>' +
+          '<details style="margin-top:8px"><summary class="help-text" style="cursor:pointer">テキストでインポート（旧形式）</summary>' +
+          '<p class="help-text">1行1ポケモン、英語名 or 日本語名</p>' +
           '<textarea id="importList" rows="6" placeholder="Venusaur&#10;Charizard&#10;リザードン&#10;..."></textarea>' +
           '<button id="btnImportList" class="btn-primary">リストをインポート</button>' +
           '<p id="importResult" class="help-text"></p>' +
+          '</details>' +
         '</div>' +
 
         // バックアップ
@@ -148,6 +156,74 @@ App.Views.Settings = (function() {
         App.Search.buildIndex();
         render(container);
       }
+    });
+
+    // JSONインポート（Champions console抽出形式）
+    document.getElementById('btnImportJson').addEventListener('click', function() {
+      document.getElementById('fileImportJson').click();
+    });
+    document.getElementById('fileImportJson').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          var entries = JSON.parse(ev.target.result);
+          if (!Array.isArray(entries)) throw new Error('配列形式のJSONではありません');
+
+          var newIds = [];
+          var matched = 0;
+          var notFound = [];
+
+          entries.forEach(function(entry) {
+            if (!entry || typeof entry.dex === 'undefined') return;
+            var name = (entry.name || '').trim();
+            var dex = Number(entry.dex);
+            var form = Number(entry.form || 0);
+
+            // 日本語名でマッチ（最優先）
+            var found = null;
+            if (name) {
+              found = App.POKEMON.find(function(p) { return p.ja === name; });
+            }
+            // 名前でマッチできなければdex番号で（form=0のみ）
+            if (!found && form === 0) {
+              found = App.POKEMON.find(function(p) { return p.id === dex; });
+            }
+
+            if (found && newIds.indexOf(found.id) < 0) {
+              newIds.push(found.id);
+              matched++;
+            } else if (!found) {
+              notFound.push(name || ('No.' + dex));
+            }
+          });
+
+          var resultEl = document.getElementById('importJsonResult');
+          if (matched === 0) {
+            resultEl.textContent = 'マッチするポケモンが見つかりませんでした。';
+            return;
+          }
+
+          var msg = entries.length + '件中 ' + matched + '匹をマッチ。';
+          if (notFound.length > 0) {
+            msg += ' 未マッチ: ' + notFound.slice(0, 5).join('、') + (notFound.length > 5 ? '…他' + (notFound.length - 5) + '件' : '');
+          }
+
+          if (confirm(matched + '匹を使用可能ポケモンとして設定します。よろしいですか？')) {
+            App.Store.saveEnabledIds(newIds);
+            App.Search.buildIndex();
+            resultEl.textContent = msg + ' → 保存しました。';
+            render(container);
+          }
+          // ファイル入力リセット（同じファイルを再選択できるよう）
+          e.target.value = '';
+        } catch(err) {
+          document.getElementById('importJsonResult').textContent = 'JSONの読み込みに失敗: ' + err.message;
+          e.target.value = '';
+        }
+      };
+      reader.readAsText(file);
     });
 
     // インポート（使用可能ポケモンリスト更新）
