@@ -67,14 +67,18 @@ App.Views.Settings = (function() {
           '</div>' +
           '<p class="help-text" style="margin-top:12px">JSONファイルからインポート（Champions console抽出形式）</p>' +
           '<div class="form-actions">' +
-            '<button id="btnImportJson" class="btn-primary">JSONファイルを選択</button>' +
+            '<button id="btnImportJsonOverwrite" class="btn-primary">上書きインポート</button>' +
+            '<button id="btnImportJsonAdd" class="btn-secondary">追加インポート</button>' +
             '<input type="file" id="fileImportJson" accept=".json" style="display:none">' +
           '</div>' +
           '<p id="importJsonResult" class="help-text"></p>' +
           '<details style="margin-top:8px"><summary class="help-text" style="cursor:pointer">テキストでインポート（旧形式）</summary>' +
           '<p class="help-text">1行1ポケモン、英語名 or 日本語名</p>' +
           '<textarea id="importList" rows="6" placeholder="Venusaur&#10;Charizard&#10;リザードン&#10;..."></textarea>' +
-          '<button id="btnImportList" class="btn-primary">リストをインポート</button>' +
+          '<div class="form-actions" style="margin-top:4px">' +
+            '<button id="btnImportListOverwrite" class="btn-primary">上書きインポート</button>' +
+            '<button id="btnImportListAdd" class="btn-secondary">追加インポート</button>' +
+          '</div>' +
           '<p id="importResult" class="help-text"></p>' +
           '</details>' +
         '</div>' +
@@ -159,7 +163,13 @@ App.Views.Settings = (function() {
     });
 
     // JSONインポート（Champions console抽出形式）
-    document.getElementById('btnImportJson').addEventListener('click', function() {
+    var jsonImportMode = 'overwrite';
+    document.getElementById('btnImportJsonOverwrite').addEventListener('click', function() {
+      jsonImportMode = 'overwrite';
+      document.getElementById('fileImportJson').click();
+    });
+    document.getElementById('btnImportJsonAdd').addEventListener('click', function() {
+      jsonImportMode = 'add';
       document.getElementById('fileImportJson').click();
     });
     document.getElementById('fileImportJson').addEventListener('change', function(e) {
@@ -181,12 +191,10 @@ App.Views.Settings = (function() {
             var dex = Number(entry.dex);
             var form = Number(entry.form || 0);
 
-            // 日本語名でマッチ（最優先）
             var found = null;
             if (name) {
               found = App.POKEMON.find(function(p) { return p.ja === name; });
             }
-            // 名前でマッチできなければdex番号で（form=0のみ）
             if (!found && form === 0) {
               found = App.POKEMON.find(function(p) { return p.id === dex; });
             }
@@ -202,6 +210,7 @@ App.Views.Settings = (function() {
           var resultEl = document.getElementById('importJsonResult');
           if (matched === 0) {
             resultEl.textContent = 'マッチするポケモンが見つかりませんでした。';
+            e.target.value = '';
             return;
           }
 
@@ -210,13 +219,20 @@ App.Views.Settings = (function() {
             msg += ' 未マッチ: ' + notFound.slice(0, 5).join('、') + (notFound.length > 5 ? '…他' + (notFound.length - 5) + '件' : '');
           }
 
-          if (confirm(matched + '匹を使用可能ポケモンとして設定します。よろしいですか？')) {
-            App.Store.saveEnabledIds(newIds);
+          var isAdd = jsonImportMode === 'add';
+          var confirmMsg = isAdd
+            ? matched + '匹を既存リストに追加します。よろしいですか？'
+            : matched + '匹で使用可能ポケモンを上書きします。よろしいですか？';
+
+          if (confirm(confirmMsg)) {
+            var finalIds = isAdd
+              ? App.Store.getEnabledIds().concat(newIds.filter(function(id) { return App.Store.getEnabledIds().indexOf(id) < 0; }))
+              : newIds;
+            App.Store.saveEnabledIds(finalIds);
             App.Search.buildIndex();
-            resultEl.textContent = msg + ' → 保存しました。';
+            resultEl.textContent = msg + ' → ' + (isAdd ? '追加' : '上書き') + '保存しました。';
             render(container);
           }
-          // ファイル入力リセット（同じファイルを再選択できるよう）
           e.target.value = '';
         } catch(err) {
           document.getElementById('importJsonResult').textContent = 'JSONの読み込みに失敗: ' + err.message;
@@ -226,8 +242,8 @@ App.Views.Settings = (function() {
       reader.readAsText(file);
     });
 
-    // インポート（使用可能ポケモンリスト更新）
-    document.getElementById('btnImportList').addEventListener('click', function() {
+    // テキストインポート
+    function doTextImport(isAdd) {
       var text = document.getElementById('importList').value.trim();
       if (!text) return;
       var lines = text.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(Boolean);
@@ -259,13 +275,22 @@ App.Views.Settings = (function() {
         msg += ' 未マッチ: ' + notFound.slice(0,5).join('、') + (notFound.length > 5 ? '…他' + (notFound.length - 5) + '件' : '');
       }
 
-      if (confirm(matched + '匹を使用可能ポケモンとして設定します。よろしいですか？')) {
-        App.Store.saveEnabledIds(newIds);
+      var confirmMsg = isAdd
+        ? matched + '匹を既存リストに追加します。よろしいですか？'
+        : matched + '匹で使用可能ポケモンを上書きします。よろしいですか？';
+
+      if (confirm(confirmMsg)) {
+        var finalIds = isAdd
+          ? App.Store.getEnabledIds().concat(newIds.filter(function(id) { return App.Store.getEnabledIds().indexOf(id) < 0; }))
+          : newIds;
+        App.Store.saveEnabledIds(finalIds);
         App.Search.buildIndex();
-        document.getElementById('importResult').textContent = msg + ' → 保存しました。';
+        document.getElementById('importResult').textContent = msg + ' → ' + (isAdd ? '追加' : '上書き') + '保存しました。';
         render(container);
       }
-    });
+    }
+    document.getElementById('btnImportListOverwrite').addEventListener('click', function() { doTextImport(false); });
+    document.getElementById('btnImportListAdd').addEventListener('click', function() { doTextImport(true); });
 
     // バックアップ
     document.getElementById('btnExport').addEventListener('click', function() {
