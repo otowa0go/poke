@@ -35,6 +35,12 @@ App.Score = (function() {
     var combos = combinations3(partyTypes);
     var candidates = [];
 
+    // メガシンカは1体まで
+    combos = combos.filter(function(trio) {
+      var megaCount = trio.filter(function(t) { return t.isMega; }).length;
+      return megaCount <= 1;
+    });
+
     combos.forEach(function(trio) {
       var coverageScore = 0;
       var detailScore = 0;

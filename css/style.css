@@ -144,6 +144,7 @@ a:hover { text-decoration: underline; }
   cursor: pointer;
 }
 .btn-sm:hover { border-color: var(--accent); }
+.btn-sort.active { border-color: var(--accent); color: var(--accent); }
 
 /* --- フォーム --- */
 .form-section {

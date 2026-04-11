@@ -66,9 +66,8 @@ App.Views.TypeEdit = (function() {
           '<h3>有利不利登録</h3>' +
           '<div class="matchup-toolbar">' +
             '<input type="text" id="matchupFilter" placeholder="フィルタ..." class="input-filter">' +
-            '<button class="btn-sm" id="bulkCircle">一括 ○</button>' +
-            '<button class="btn-sm" id="bulkTriangle">一括 △</button>' +
-            '<button class="btn-sm" id="bulkCross">一括 ×</button>' +
+            '<button class="btn-sm btn-sort active" id="sortByDex">図鑑番号</button>' +
+            '<button class="btn-sm btn-sort" id="sortByRank">使用率順</button>' +
           '</div>' +
           '<div id="matchupTable" class="matchup-table"></div>' +
         '</div>' +
@@ -107,28 +106,44 @@ App.Views.TypeEdit = (function() {
     renderMatchupTable(type.matchups || {});
 
     // フィルタ
-    document.getElementById('matchupFilter').addEventListener('input', function() {
-      var q = App.Kana.normalize(this.value);
+    document.getElementById('matchupFilter').addEventListener('input', applyFilter);
+
+    // ソートボタン
+    document.getElementById('sortByDex').addEventListener('click', function() {
+      currentSort = 'dex';
+      document.getElementById('sortByDex').classList.add('active');
+      document.getElementById('sortByRank').classList.remove('active');
+      var matchups = collectMatchups();
+      renderMatchupTable(matchups);
+      applyFilter();
+    });
+    document.getElementById('sortByRank').addEventListener('click', function() {
+      currentSort = 'rank';
+      document.getElementById('sortByRank').classList.add('active');
+      document.getElementById('sortByDex').classList.remove('active');
+      var matchups = collectMatchups();
+      renderMatchupTable(matchups);
+      applyFilter();
+    });
+
+    function collectMatchups() {
+      var matchups = {};
+      container.querySelectorAll('.matchup-row').forEach(function(row) {
+        var oppId = parseInt(row.getAttribute('data-pokemon-id'));
+        var checked = row.querySelector('input[type="radio"]:checked');
+        if (checked) matchups[oppId] = checked.value;
+      });
+      return matchups;
+    }
+
+    function applyFilter() {
+      var q = App.Kana.normalize(document.getElementById('matchupFilter').value);
       var rows = container.querySelectorAll('.matchup-row');
       rows.forEach(function(row) {
         var name = App.Kana.normalize(row.getAttribute('data-name') || '');
         row.style.display = name.indexOf(q) >= 0 ? '' : 'none';
       });
-    });
-
-    // 一括設定
-    ['bulkCircle', 'bulkTriangle', 'bulkCross'].forEach(function(btnId) {
-      var val = btnId === 'bulkCircle' ? '○' : (btnId === 'bulkTriangle' ? '△' : '×');
-      document.getElementById(btnId).addEventListener('click', function() {
-        var visibleRows = container.querySelectorAll('.matchup-row:not([style*="display: none"])');
-        visibleRows.forEach(function(row) {
-          var radios = row.querySelectorAll('input[type="radio"]');
-          radios.forEach(function(r) {
-            r.checked = (r.value === val);
-          });
-        });
-      });
-    });
+    }
 
     // 保存
     document.getElementById('btnSave').addEventListener('click', function() {
@@ -176,10 +191,22 @@ App.Views.TypeEdit = (function() {
     });
   }
 
+  var currentSort = 'dex'; // 'dex' or 'rank'
+
   function renderMatchupTable(matchups) {
     var table = document.getElementById('matchupTable');
     var html = '';
-    App.Store.getEnabledPokemon().forEach(function(p) {
+    var list = App.Store.getEnabledPokemon().slice();
+
+    if (currentSort === 'rank') {
+      list.sort(function(a, b) {
+        var ra = App.USAGE_RANK[a.id] || 999;
+        var rb = App.USAGE_RANK[b.id] || 999;
+        return ra !== rb ? ra - rb : a.id - b.id;
+      });
+    }
+
+    list.forEach(function(p) {
       var current = matchups[p.id] || '△';
       html +=
         '<div class="matchup-row" data-pokemon-id="' + p.id + '" data-name="' + p.ja + ' ' + p.en + '">' +
