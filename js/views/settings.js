@@ -57,10 +57,15 @@ App.Views.Settings = (function() {
           '</div>' +
         '</div>' +
 
-        // 使用可能ポケモンリスト インポート
+        // 使用可能ポケモンリスト管理
         '<div class="form-section">' +
-          '<h3>使用可能ポケモンリスト更新</h3>' +
-          '<p class="help-text">テキストで貼り付け（1行1ポケモン、英語名 or 日本語名）</p>' +
+          '<h3>使用可能ポケモンリスト</h3>' +
+          '<p class="help-text">現在: ' + App.Store.getEnabledPokemon().length + '匹 / 全' + App.POKEMON.length + '匹</p>' +
+          '<div class="form-actions">' +
+            '<button id="btnExportList" class="btn-secondary">リストをエクスポート</button>' +
+            '<button id="btnResetList" class="btn-secondary">デフォルトに戻す</button>' +
+          '</div>' +
+          '<p class="help-text" style="margin-top:12px">新しいリストをインポート（1行1ポケモン、英語名 or 日本語名）</p>' +
           '<textarea id="importList" rows="6" placeholder="Venusaur&#10;Charizard&#10;リザードン&#10;..."></textarea>' +
           '<button id="btnImportList" class="btn-primary">リストをインポート</button>' +
           '<p id="importResult" class="help-text"></p>' +
@@ -125,32 +130,65 @@ App.Views.Settings = (function() {
       });
     });
 
+    // エクスポート（使用可能ポケモンリスト）
+    document.getElementById('btnExportList').addEventListener('click', function() {
+      var list = App.Store.getEnabledPokemon();
+      var text = list.map(function(p) { return p.ja; }).join('\n');
+      var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'pokemon_list_' + new Date().toISOString().slice(0,10) + '.txt';
+      a.click();
+    });
+
+    // デフォルトに戻す
+    document.getElementById('btnResetList').addEventListener('click', function() {
+      if (confirm('使用可能ポケモンリストをデフォルト（186匹）に戻しますか？')) {
+        App.Store.saveEnabledIds(App.Store.DEFAULT_ENABLED_IDS.slice());
+        App.Search.buildIndex();
+        render(container);
+      }
+    });
+
     // インポート（使用可能ポケモンリスト更新）
     document.getElementById('btnImportList').addEventListener('click', function() {
       var text = document.getElementById('importList').value.trim();
       if (!text) return;
       var lines = text.split(/\r?\n/).map(function(l) { return l.trim(); }).filter(Boolean);
       var matched = 0;
-      var newList = [];
+      var notFound = [];
+      var newIds = [];
 
       lines.forEach(function(line) {
-        // 英語名 or 日本語名でマッチ
         var found = App.POKEMON.find(function(p) {
           return p.en.toLowerCase() === line.toLowerCase() ||
                  p.ja === line ||
                  App.Kana.normalize(p.ja) === App.Kana.normalize(line);
         });
-        if (found && newList.indexOf(found.id) < 0) {
-          newList.push(found.id);
+        if (found && newIds.indexOf(found.id) < 0) {
+          newIds.push(found.id);
           matched++;
+        } else if (!found) {
+          notFound.push(line);
         }
       });
 
-      // 現在の全ポケモンデータを新リストで置き換え
-      // （この機能は将来的に pokemon_champions.json を動的更新する基盤）
-      document.getElementById('importResult').textContent =
-        lines.length + '行中 ' + matched + '匹をマッチしました。' +
-        (lines.length - matched > 0 ? ' (' + (lines.length - matched) + '行マッチしませんでした)' : '');
+      if (matched === 0) {
+        document.getElementById('importResult').textContent = 'マッチするポケモンが見つかりませんでした。';
+        return;
+      }
+
+      var msg = lines.length + '行中 ' + matched + '匹をマッチしました。';
+      if (notFound.length > 0) {
+        msg += ' 未マッチ: ' + notFound.slice(0,5).join('、') + (notFound.length > 5 ? '…他' + (notFound.length - 5) + '件' : '');
+      }
+
+      if (confirm(matched + '匹を使用可能ポケモンとして設定します。よろしいですか？')) {
+        App.Store.saveEnabledIds(newIds);
+        App.Search.buildIndex();
+        document.getElementById('importResult').textContent = msg + ' → 保存しました。';
+        render(container);
+      }
     });
 
     // バックアップ

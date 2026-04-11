@@ -179,7 +179,7 @@ App.Views.TypeEdit = (function() {
   function renderMatchupTable(matchups) {
     var table = document.getElementById('matchupTable');
     var html = '';
-    App.POKEMON.forEach(function(p) {
+    App.Store.getEnabledPokemon().forEach(function(p) {
       var current = matchups[p.id] || '△';
       html +=
         '<div class="matchup-row" data-pokemon-id="' + p.id + '" data-name="' + p.ja + ' ' + p.en + '">' +

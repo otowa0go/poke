@@ -8,7 +8,8 @@ App.Search = (function() {
     entries = [];
     var norm = App.Kana.normalize;
 
-    App.POKEMON.forEach(function(p) {
+    // 使用可能ポケモンのみインデックス化
+    App.Store.getEnabledPokemon().forEach(function(p) {
       // 日本語名（カタカナ→ひらがな正規化）
       entries.push({ normalized: norm(p.ja), pokemon: p });
       // 英語名
