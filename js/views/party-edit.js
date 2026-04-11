@@ -75,6 +75,9 @@ App.Views.PartyEdit = (function() {
       top50.sort(function(a, b) { return a.rank - b.rank; });
     }
 
+    // 2匹カバー判定の閾値（上位N匹に適用）
+    var doubleThreshold = 20;
+
     function getSelectedTypes() {
       var selected = [];
       for (var i = 0; i < 6; i++) {
@@ -87,16 +90,22 @@ App.Views.PartyEdit = (function() {
       return selected;
     }
 
-    function getCoverage(selectedTypes, pokemonId) {
+    // coverage: 'full'(2匹以上○) / 'single'(1匹○) / 'partial'(△のみ) / 'none'(×のみ)
+    function getCoverage(selectedTypes, pokemonId, requireDouble) {
       if (selectedTypes.length === 0) return 'none';
-      var hasCircle = false;
+      var circleCount = 0;
       var hasTriangle = false;
       selectedTypes.forEach(function(t) {
         var m = (t.matchups && t.matchups[pokemonId]) || '△';
-        if (m === '○') hasCircle = true;
+        if (m === '○') circleCount++;
         else if (m === '△') hasTriangle = true;
       });
-      if (hasCircle) return 'ok';
+      if (requireDouble) {
+        if (circleCount >= 2) return 'full';
+        if (circleCount === 1) return 'single';
+      } else {
+        if (circleCount >= 1) return 'full';
+      }
       if (hasTriangle) return 'partial';
       return 'none';
     }
@@ -120,16 +129,18 @@ App.Views.PartyEdit = (function() {
       // カバレッジパネル更新
       if (top50.length === 0) return;
 
-      var groups = { ok: [], partial: [], none: [] };
+      var groups = { full: [], single: [], partial: [], none: [] };
       top50.forEach(function(entry) {
-        var cov = getCoverage(selectedTypes, entry.pokemon.id);
+        var requireDouble = entry.rank <= doubleThreshold;
+        var cov = getCoverage(selectedTypes, entry.pokemon.id, requireDouble);
         groups[cov].push(entry.pokemon);
       });
 
-      var total = top50.length;
-      var okCount = groups.ok.length;
-      var noneCount = groups.none.length;
+      var fullCount    = groups.full.length;
+      var singleCount  = groups.single.length;
       var partialCount = groups.partial.length;
+      var noneCount    = groups.none.length;
+      var total        = top50.length;
 
       function chips(list, cls) {
         return list.map(function(p) {
@@ -137,30 +148,46 @@ App.Views.PartyEdit = (function() {
         }).join('');
       }
 
-      var html = '<div class="coverage-header">' +
-        'カバレッジ確認 <span class="coverage-stats">TOP' + total + '中 ' +
-        '<span class="cov-ok-text">' + okCount + 'カバー</span> / ' +
-        '<span class="cov-none-text">' + noneCount + '未カバー</span>' +
-        '</span></div>';
+      var html =
+        '<div class="coverage-header">' +
+          'カバレッジ確認' +
+          '<span class="coverage-threshold-btns">' +
+            '<button class="btn-sm btn-sort' + (doubleThreshold === 20 ? ' active' : '') + '" id="thresh20">上位20</button>' +
+            '<button class="btn-sm btn-sort' + (doubleThreshold === 30 ? ' active' : '') + '" id="thresh30">上位30</button>' +
+            '<span class="cov-thresh-label">を2匹カバー判定</span>' +
+          '</span>' +
+        '</div>' +
+        '<div class="coverage-stats-row">' +
+          '<span class="cov-ok-text">✅ ' + fullCount + '</span>' +
+          (singleCount > 0 ? '<span class="cov-single-text">🔵 ' + singleCount + '</span>' : '') +
+          (partialCount > 0 ? '<span class="cov-partial-text">⚠️ ' + partialCount + '</span>' : '') +
+          (noneCount > 0 ? '<span class="cov-none-text">❌ ' + noneCount + '</span>' : '') +
+        '</div>';
 
       if (selectedTypes.length === 0) {
         html += '<p class="coverage-empty">ポケモンを選択するとカバレッジが表示されます</p>';
       } else {
         if (groups.none.length > 0) {
           html += '<div class="coverage-group">' +
-            '<div class="coverage-group-label cov-none-label">未カバー (' + noneCount + '匹)</div>' +
+            '<div class="coverage-group-label cov-none-label">❌ 未カバー (' + noneCount + '匹)</div>' +
             '<div class="coverage-chips">' + chips(groups.none, 'chip-none') + '</div>' +
           '</div>';
         }
         if (groups.partial.length > 0) {
           html += '<div class="coverage-group">' +
-            '<div class="coverage-group-label cov-partial-label">△のみ (' + partialCount + '匹)</div>' +
+            '<div class="coverage-group-label cov-partial-label">⚠️ △のみ (' + partialCount + '匹)</div>' +
             '<div class="coverage-chips">' + chips(groups.partial, 'chip-partial') + '</div>' +
           '</div>';
         }
-        if (groups.ok.length > 0) {
-          html += '<details class="coverage-group"><summary class="coverage-group-label cov-ok-label">カバー済み (' + okCount + '匹)</summary>' +
-            '<div class="coverage-chips">' + chips(groups.ok, 'chip-ok') + '</div>' +
+        if (groups.single.length > 0) {
+          html += '<div class="coverage-group">' +
+            '<div class="coverage-group-label cov-single-label">🔵 1匹カバー (' + singleCount + '匹)</div>' +
+            '<div class="coverage-chips">' + chips(groups.single, 'chip-single') + '</div>' +
+          '</div>';
+        }
+        if (groups.full.length > 0) {
+          html += '<details class="coverage-group"><summary class="coverage-group-label cov-ok-label">✅ カバー済み (' + fullCount + '匹)</summary>' +
+            '<div class="coverage-chips">' + chips(groups.full, 'chip-ok') + '</div>' +
           '</details>';
         }
       }
@@ -172,6 +199,12 @@ App.Views.PartyEdit = (function() {
       document.getElementById('partySlot' + i).addEventListener('change', updateSummary);
     }
     updateSummary();
+
+    // 閾値ボタン（イベント委譲でパネル再描画後も動作）
+    document.getElementById('coveragePanel').addEventListener('click', function(e) {
+      if (e.target.id === 'thresh20') { doubleThreshold = 20; updateSummary(); }
+      if (e.target.id === 'thresh30') { doubleThreshold = 30; updateSummary(); }
+    });
 
     // 保存
     document.getElementById('btnSave').addEventListener('click', function() {
