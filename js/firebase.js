@@ -26,9 +26,16 @@ App.Firebase = (function() {
       // 認証をブラウザに永続化
       auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-      // オフラインキャッシュ有効化
+      // オフラインキャッシュ有効化（失敗してもそのまま続行）
       db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
-        console.warn('Firestore persistence:', err.code);
+        if (err.code === 'failed-precondition') {
+          // 複数タブが開いている場合はキャッシュ無効で動作
+          console.warn('Firestore persistence disabled: multiple tabs open');
+        } else if (err.code === 'unimplemented') {
+          console.warn('Firestore persistence not supported in this browser');
+        } else {
+          console.warn('Firestore persistence:', err.code);
+        }
       });
 
       // 認証状態の監視
@@ -82,8 +89,17 @@ App.Firebase = (function() {
       _syncStatus = '同期済み (' + new Date().toLocaleTimeString() + ')';
       console.log('Pushed to cloud');
     }).catch(function(err) {
-      _syncStatus = '同期失敗: ' + err.message;
-      console.error('Push failed:', err);
+      // IndexedDB 接続切れの場合はページリロードを促す
+      if (err.message && err.message.indexOf('IndexedDb') !== -1) {
+        _syncStatus = '同期失敗（ページを再読み込みしてください）';
+        console.error('Push failed (IndexedDB lost):', err);
+        if (confirm('クラウド同期でエラーが発生しました。\nページを再読み込みして再試行しますか？')) {
+          location.reload();
+        }
+      } else {
+        _syncStatus = '同期失敗: ' + err.message;
+        console.error('Push failed:', err);
+      }
     });
   }
 
