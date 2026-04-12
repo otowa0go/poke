@@ -745,6 +745,21 @@ a:hover { text-decoration: underline; }
   color: var(--text2);
   margin: 0;
 }
+.multi-counter-label { color: #f0a500; }
+.multi-counter-list { padding-top: 4px; }
+.multi-counter-item {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.multi-counter-item:last-child { border-bottom: none; }
+.multi-counter-name { font-weight: 600; color: var(--text); }
+.multi-counter-count { color: #f0a500; font-weight: 700; min-width: 28px; }
+.multi-counter-pokes { color: var(--text2); font-size: 0.75rem; width: 100%; }
 
 /* --- レスポンシブ --- */
 @media (max-width: 480px) {

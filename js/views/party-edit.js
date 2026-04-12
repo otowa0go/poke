@@ -200,6 +200,39 @@ App.Views.PartyEdit = (function() {
             '<div class="coverage-chips">' + chips(groups.full, 'chip-ok') + '</div>' +
           '</details>';
         }
+
+        // まとめて対策ランキング
+        var weakPokemons = groups.none.concat(groups.partial).concat(groups.single);
+        if (weakPokemons.length >= 2) {
+          var selectedIds = selectedTypes.map(function(t) { return t.id; });
+          var ranked = types
+            .filter(function(t) { return selectedIds.indexOf(t.id) < 0; })
+            .map(function(t) {
+              var covered = weakPokemons.filter(function(p) {
+                return t.matchups && t.matchups[p.id] === '○';
+              });
+              return { type: t, covered: covered };
+            })
+            .filter(function(c) { return c.covered.length >= 2; })
+            .sort(function(a, b) { return b.covered.length - a.covered.length; })
+            .slice(0, 5);
+
+          if (ranked.length > 0) {
+            html += '<details class="coverage-group multi-counter-group"><summary class="coverage-group-label multi-counter-label">🎯 まとめて対策できる型（上位' + ranked.length + '）</summary>' +
+              '<div class="multi-counter-list">';
+            ranked.forEach(function(c) {
+              var poke = App.POKEMON_MAP[c.type.pokemonId];
+              var typeName = (poke ? poke.ja : '???') + (c.type.nickname ? ' (' + c.type.nickname + ')' : '');
+              var covNames = c.covered.map(function(p) { return p.ja; }).join('、');
+              html += '<div class="multi-counter-item">' +
+                '<span class="multi-counter-name">' + typeName + '</span>' +
+                '<span class="multi-counter-count">' + c.covered.length + '匹</span>' +
+                '<div class="multi-counter-pokes">' + covNames + '</div>' +
+              '</div>';
+            });
+            html += '</div></details>';
+          }
+        }
       }
 
       document.getElementById('coveragePanel').innerHTML = html;
