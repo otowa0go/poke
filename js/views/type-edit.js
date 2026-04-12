@@ -66,8 +66,8 @@ App.Views.TypeEdit = (function() {
           '<h3>有利不利登録</h3>' +
           '<div class="matchup-toolbar">' +
             '<input type="text" id="matchupFilter" placeholder="フィルタ..." class="input-filter">' +
-            '<button class="btn-sm btn-sort active" id="sortByDex">図鑑番号</button>' +
-            '<button class="btn-sm btn-sort" id="sortByRank">使用率順</button>' +
+            '<button class="btn-sm btn-sort' + (currentSort === 'dex' ? ' active' : '') + '" id="sortByDex">図鑑番号</button>' +
+            '<button class="btn-sm btn-sort' + (currentSort === 'rank' ? ' active' : '') + '" id="sortByRank">使用率順</button>' +
           '</div>' +
           '<div id="matchupTable" class="matchup-table"></div>' +
         '</div>' +
