@@ -196,8 +196,8 @@ App.Views.PartyEdit = (function() {
           '</div>';
         }
         if (groups.full.length > 0) {
-          html += '<details class="coverage-group"><summary class="coverage-group-label cov-ok-label">✅ カバー済み (' + fullCount + '匹)</summary>' +
-            '<div class="coverage-chips">' + chips(groups.full, 'chip-ok') + '</div>' +
+          html += '<details class="coverage-group"><summary class="coverage-group-label cov-ok-label">✅ カバー済み (' + fullCount + '匹) <span class="chip-hint">タップで対策確認</span></summary>' +
+            '<div class="coverage-chips">' + clickableChips(groups.full, 'chip-ok') + '</div>' +
           '</details>';
         }
 
