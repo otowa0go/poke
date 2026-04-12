@@ -9,6 +9,20 @@ document.addEventListener('DOMContentLoaded', function() {
   var storedRank = App.Store.getUsageRank();
   if (storedRank) App.USAGE_RANK = storedRank;
 
+  // データマイグレーション: 933(ジオヅム)→934(キョジオーン) の修正
+  (function() {
+    var ids = App.Store.getEnabledIds();
+    var idx933 = ids.indexOf(933);
+    if (idx933 >= 0 && ids.indexOf(934) < 0) {
+      ids[idx933] = 934;
+      App.Store.saveEnabledIds(ids);
+    } else if (idx933 >= 0) {
+      // 両方ある場合は933を除去
+      ids.splice(idx933, 1);
+      App.Store.saveEnabledIds(ids);
+    }
+  })();
+
   // 検索インデックス構築
   App.Search.buildIndex();
 
