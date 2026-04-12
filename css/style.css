@@ -701,6 +701,50 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--green);
   color: var(--text2);
 }
+.chip-clickable {
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.chip-clickable:hover { opacity: 0.75; }
+.chip-clickable:active { transform: scale(0.95); }
+.chip-hint {
+  font-size: 0.65rem;
+  color: var(--text2);
+  font-weight: 400;
+}
+.counter-suggestion-panel {
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.counter-suggestion-panel:empty { display: none; }
+.counter-suggestion-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.counter-suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.counter-suggestion-chip {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(77,184,232,0.15);
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+.counter-suggestion-empty {
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin: 0;
+}
 
 /* --- レスポンシブ --- */
 @media (max-width: 480px) {

@@ -56,6 +56,7 @@ App.Views.PartyEdit = (function() {
         '</div>' +
         '<div id="partySummary" class="party-summary"></div>' +
         '<div id="coveragePanel" class="coverage-panel"></div>' +
+        '<div id="counterSuggestionPanel" class="counter-suggestion-panel"></div>' +
         '<div class="form-actions">' +
           '<button id="btnSave" class="btn-primary">保存</button>' +
           '<a href="#/parties" class="btn-secondary">キャンセル</a>' +
@@ -147,6 +148,11 @@ App.Views.PartyEdit = (function() {
           return '<span class="coverage-chip ' + cls + '">' + p.ja + '</span>';
         }).join('');
       }
+      function clickableChips(list, cls) {
+        return list.map(function(p) {
+          return '<button class="coverage-chip ' + cls + ' chip-clickable" data-pokemon-id="' + p.id + '">' + p.ja + '</button>';
+        }).join('');
+      }
 
       var html =
         '<div class="coverage-header">' +
@@ -164,19 +170,23 @@ App.Views.PartyEdit = (function() {
           (noneCount > 0 ? '<span class="cov-none-text">❌ ' + noneCount + '</span>' : '') +
         '</div>';
 
+      // パーティ変更時は対策候補パネルをリセット
+      var suggPanel = document.getElementById('counterSuggestionPanel');
+      if (suggPanel) { suggPanel.innerHTML = ''; suggPanel.removeAttribute('data-active-id'); }
+
       if (selectedTypes.length === 0) {
         html += '<p class="coverage-empty">ポケモンを選択するとカバレッジが表示されます</p>';
       } else {
         if (groups.none.length > 0) {
           html += '<div class="coverage-group">' +
-            '<div class="coverage-group-label cov-none-label">❌ 未カバー (' + noneCount + '匹)</div>' +
-            '<div class="coverage-chips">' + chips(groups.none, 'chip-none') + '</div>' +
+            '<div class="coverage-group-label cov-none-label">❌ 未カバー (' + noneCount + '匹) <span class="chip-hint">タップで対策確認</span></div>' +
+            '<div class="coverage-chips">' + clickableChips(groups.none, 'chip-none') + '</div>' +
           '</div>';
         }
         if (groups.partial.length > 0) {
           html += '<div class="coverage-group">' +
-            '<div class="coverage-group-label cov-partial-label">⚠️ △のみ (' + partialCount + '匹)</div>' +
-            '<div class="coverage-chips">' + chips(groups.partial, 'chip-partial') + '</div>' +
+            '<div class="coverage-group-label cov-partial-label">⚠️ △のみ (' + partialCount + '匹) <span class="chip-hint">タップで対策確認</span></div>' +
+            '<div class="coverage-chips">' + clickableChips(groups.partial, 'chip-partial') + '</div>' +
           '</div>';
         }
         if (groups.single.length > 0) {
@@ -200,11 +210,52 @@ App.Views.PartyEdit = (function() {
     }
     updateSummary();
 
-    // 閾値ボタン（イベント委譲でパネル再描画後も動作）
+    // 閾値ボタン＆チップクリック（イベント委譲でパネル再描画後も動作）
     document.getElementById('coveragePanel').addEventListener('click', function(e) {
       if (e.target.id === 'thresh20') { doubleThreshold = 20; updateSummary(); }
       if (e.target.id === 'thresh30') { doubleThreshold = 30; updateSummary(); }
+      var chip = e.target.closest('.chip-clickable');
+      if (chip) {
+        var pokemonId = parseInt(chip.getAttribute('data-pokemon-id'));
+        showCounterSuggestion(pokemonId);
+      }
     });
+
+    function showCounterSuggestion(pokemonId) {
+      var panel = document.getElementById('counterSuggestionPanel');
+      // 同じチップを再クリックで閉じる
+      if (panel.getAttribute('data-active-id') === String(pokemonId)) {
+        panel.innerHTML = '';
+        panel.removeAttribute('data-active-id');
+        return;
+      }
+      panel.setAttribute('data-active-id', String(pokemonId));
+
+      var selectedTypes = getSelectedTypes();
+      var selectedIds = selectedTypes.map(function(t) { return t.id; });
+      var counters = types.filter(function(t) {
+        return selectedIds.indexOf(t.id) < 0 &&
+               t.matchups && t.matchups[pokemonId] === '○';
+      });
+
+      var pokemon = App.POKEMON_MAP[pokemonId];
+      var pokeName = pokemon ? pokemon.ja : '???';
+
+      var html = '<div class="counter-suggestion-header">【' + pokeName + '】への対策候補（未採用の型）</div>';
+      if (counters.length === 0) {
+        html += '<p class="counter-suggestion-empty">○として登録された型がありません</p>';
+      } else {
+        html += '<div class="counter-suggestion-chips">';
+        counters.forEach(function(t) {
+          var poke = App.POKEMON_MAP[t.pokemonId];
+          var name = poke ? poke.ja : '???';
+          var nick = t.nickname ? ' <small>(' + t.nickname + ')</small>' : '';
+          html += '<span class="counter-suggestion-chip">' + name + nick + '</span>';
+        });
+        html += '</div>';
+      }
+      panel.innerHTML = html;
+    }
 
     // 保存
     document.getElementById('btnSave').addEventListener('click', function() {
