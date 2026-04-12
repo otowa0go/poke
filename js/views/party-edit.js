@@ -191,8 +191,8 @@ App.Views.PartyEdit = (function() {
         }
         if (groups.single.length > 0) {
           html += '<div class="coverage-group">' +
-            '<div class="coverage-group-label cov-single-label">🔵 1匹カバー (' + singleCount + '匹)</div>' +
-            '<div class="coverage-chips">' + chips(groups.single, 'chip-single') + '</div>' +
+            '<div class="coverage-group-label cov-single-label">🔵 1匹カバー (' + singleCount + '匹) <span class="chip-hint">タップで対策確認</span></div>' +
+            '<div class="coverage-chips">' + clickableChips(groups.single, 'chip-single') + '</div>' +
           '</div>';
         }
         if (groups.full.length > 0) {
