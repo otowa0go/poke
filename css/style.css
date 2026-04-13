@@ -391,6 +391,7 @@ a:hover { text-decoration: underline; }
 .party-member small { color: var(--text2); margin-left: 2px; }
 .party-empty { color: var(--text2); font-size: 0.85rem; }
 .party-slot-select { width: 100%; }
+.mega-warning { color: #e87040; font-weight: bold; }
 .party-summary {
   text-align: center;
   color: var(--text2);

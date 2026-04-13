@@ -124,8 +124,9 @@ App.Views.PartyEdit = (function() {
           }
         }
       }
+      var megaWarning = megaCount >= 3 ? ' <span class="mega-warning">⚠️ メガ3体！</span>' : '';
       document.getElementById('partySummary').innerHTML =
-        'メガシンカ: ' + megaCount + ' / 優先: ' + priorityCount;
+        'メガシンカ: ' + megaCount + megaWarning + ' / 優先: ' + priorityCount;
 
       // カバレッジパネル更新
       if (top50.length === 0) return;
@@ -170,6 +171,11 @@ App.Views.PartyEdit = (function() {
           (noneCount > 0 ? '<span class="cov-none-text">❌ ' + noneCount + '</span>' : '') +
         '</div>';
 
+      // まとめて対策 <details> の open 状態を保存
+      var multiCounterOpen = false;
+      var existingMultiCounter = document.querySelector('#coveragePanel .multi-counter-group');
+      if (existingMultiCounter) multiCounterOpen = existingMultiCounter.open;
+
       // パーティ変更時は対策候補パネルをリセット
       var suggPanel = document.getElementById('counterSuggestionPanel');
       if (suggPanel) { suggPanel.innerHTML = ''; suggPanel.removeAttribute('data-active-id'); }
@@ -206,7 +212,7 @@ App.Views.PartyEdit = (function() {
         if (weakPokemons.length >= 2) {
           var selectedIds = selectedTypes.map(function(t) { return t.id; });
           var ranked = types
-            .filter(function(t) { return selectedIds.indexOf(t.id) < 0; })
+            .filter(function(t) { return selectedIds.indexOf(t.id) < 0 && !(megaCount >= 2 && t.isMega); })
             .map(function(t) {
               var covered = weakPokemons.filter(function(p) {
                 return t.matchups && t.matchups[p.id] === '○';
@@ -218,7 +224,7 @@ App.Views.PartyEdit = (function() {
             .slice(0, 5);
 
           if (ranked.length > 0) {
-            html += '<details class="coverage-group multi-counter-group"><summary class="coverage-group-label multi-counter-label">🎯 まとめて対策できる型（上位' + ranked.length + '）</summary>' +
+            html += '<details class="coverage-group multi-counter-group"' + (multiCounterOpen ? ' open' : '') + '><summary class="coverage-group-label multi-counter-label">🎯 まとめて対策できる型（上位' + ranked.length + '）</summary>' +
               '<div class="multi-counter-list">';
             ranked.forEach(function(c) {
               var poke = App.POKEMON_MAP[c.type.pokemonId];
