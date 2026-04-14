@@ -211,8 +211,13 @@ App.Views.PartyEdit = (function() {
         var weakPokemons = groups.none.concat(groups.partial).concat(groups.single);
         if (weakPokemons.length >= 2) {
           var selectedIds = selectedTypes.map(function(t) { return t.id; });
+          var selectedPokemonIds = selectedTypes.map(function(t) { return t.pokemonId; });
           var ranked = types
-            .filter(function(t) { return selectedIds.indexOf(t.id) < 0 && !(megaCount >= 2 && t.isMega); })
+            .filter(function(t) {
+              return selectedIds.indexOf(t.id) < 0 &&
+                     selectedPokemonIds.indexOf(t.pokemonId) < 0 &&
+                     !(megaCount >= 2 && t.isMega);
+            })
             .map(function(t) {
               var covered = weakPokemons.filter(function(p) {
                 return t.matchups && t.matchups[p.id] === '○';
@@ -244,9 +249,30 @@ App.Views.PartyEdit = (function() {
       document.getElementById('coveragePanel').innerHTML = html;
     }
 
-    for (var i = 0; i < 6; i++) {
-      document.getElementById('partySlot' + i).addEventListener('change', updateSummary);
+    function updateSlotOptions() {
+      var usedIds = [];
+      for (var i = 0; i < 6; i++) {
+        var val = document.getElementById('partySlot' + i).value;
+        if (val) usedIds.push(val);
+      }
+      for (var i = 0; i < 6; i++) {
+        var sel = document.getElementById('partySlot' + i);
+        var ownVal = sel.value;
+        for (var j = 0; j < sel.options.length; j++) {
+          var opt = sel.options[j];
+          if (!opt.value) continue;
+          opt.disabled = usedIds.indexOf(opt.value) >= 0 && opt.value !== ownVal;
+        }
+      }
     }
+
+    for (var i = 0; i < 6; i++) {
+      document.getElementById('partySlot' + i).addEventListener('change', function() {
+        updateSlotOptions();
+        updateSummary();
+      });
+    }
+    updateSlotOptions();
     updateSummary();
 
     // 閾値ボタン＆チップクリック（イベント委譲でパネル再描画後も動作）
