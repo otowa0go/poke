@@ -298,8 +298,10 @@ App.Views.PartyEdit = (function() {
 
       var selectedTypes = getSelectedTypes();
       var selectedIds = selectedTypes.map(function(t) { return t.id; });
+      var selectedPokemonIds = selectedTypes.map(function(t) { return t.pokemonId; });
       var counters = types.filter(function(t) {
         return selectedIds.indexOf(t.id) < 0 &&
+               selectedPokemonIds.indexOf(t.pokemonId) < 0 &&
                t.matchups && t.matchups[pokemonId] === '○';
       });
 

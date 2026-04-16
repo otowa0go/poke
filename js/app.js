@@ -23,6 +23,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   })();
 
+  // データマイグレーション: typeのpokemonIdを数値に正規化
+  (function() {
+    var types = App.Store.getTypes();
+    var needsSave = false;
+    types.forEach(function(t) {
+      if (typeof t.pokemonId === 'string') {
+        t.pokemonId = parseInt(t.pokemonId, 10);
+        needsSave = true;
+      }
+    });
+    if (needsSave) {
+      types.forEach(function(t) { App.Store.saveType(t); });
+    }
+  })();
+
   // 検索インデックス構築
   App.Search.buildIndex();
 
