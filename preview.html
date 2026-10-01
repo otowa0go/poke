@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>カラープレビュー</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', 'Hiragino Sans', sans-serif; background: #333; padding: 20px; }
+    h1 { color: #fff; text-align: center; margin-bottom: 24px; font-size: 1.2rem; }
+    .panels { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .panel { width: 340px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .panel-label { text-align: center; color: #ccc; margin-bottom: 8px; font-size: 0.9rem; }
+
+    /* ===== 案A: ライトブルー ===== */
+    .theme-a {
+      --bg: #f0f8ff;
+      --bg2: #ffffff;
+      --bg3: #ddeeff;
+      --text: #1a2a3a;
+      --text2: #5a7a9a;
+      --accent: #c8960a;
+      --accent2: #2a7abf;
+      --green: #27ae60;
+      --yellow: #e67e22;
+      --red: #e74c3c;
+      --blue: #2a7abf;
+      --border: #b8d4ea;
+      --radius: 8px;
+    }
+
+    /* ===== 案C: ブラックベース ===== */
+    .theme-c {
+      --bg: #0a0a14;
+      --bg2: #12121f;
+      --bg3: #1a1a30;
+      --text: #e8eaf0;
+      --text2: #7080a0;
+      --accent: #4db8e8;
+      --accent2: #e8c840;
+      --green: #2ecc71;
+      --yellow: #e8c840;
+      --red: #e74c3c;
+      --blue: #4db8e8;
+      --border: #252540;
+      --radius: 8px;
+    }
+
+    .mock {
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      min-height: 520px;
+    }
+
+    /* ホーム */
+    .app-title {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .app-subtitle {
+      text-align: center;
+      color: var(--text2);
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+    }
+    .home-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--bg2);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .home-btn-primary { border-color: var(--accent); }
+    .home-btn-icon { font-size: 1.5rem; }
+    .home-btn-label { font-size: 0.95rem; font-weight: 600; }
+    .home-btn-desc { font-size: 0.75rem; color: var(--text2); margin-left: auto; }
+
+    /* シミュレータ */
+    .section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .section h3 { font-size: 0.9rem; color: var(--accent); margin-bottom: 10px; }
+    .party-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .party-chip {
+      background: var(--bg3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+    .opp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .opp-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      color: var(--text2);
+      font-size: 0.8rem;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 600;
+      width: 100%;
+    }
+
+    /* 結果 */
+    .result-card {
+      display: flex;
+      gap: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+    .result-rank { font-size: 1.4rem; }
+    .result-names { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+    .result-score { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+    .result-sub { font-size: 0.75rem; color: var(--text2); }
+    .badge-mega {
+      display: inline-block;
+      background: var(--accent2);
+      color: var(--bg);
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .cover-full { color: var(--green); font-size: 0.8rem; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+    }
+
+    .nav-bar {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 4px;
+      margin-top: 8px;
+    }
+    .nav-item { text-align: center; font-size: 0.65rem; color: var(--text2); }
+    .nav-item.active { color: var(--accent); }
+    .nav-icon { font-size: 1.2rem; display: block; }
+  </style>
+</head>
+<body>
+  <h1>カラーテーマ プレビュー</h1>
+  <div class="panels">
+
+    <!-- 案A -->
+    <div class="panel">
+      <div class="panel-label">案A：ライトブルー系</div>
+      <div class="mock theme-a">
+        <div class="app-title">ポケバトルアシスト</div>
+        <div class="app-subtitle">チャンピオンズ 選出補助ツール</div>
+
+        <div class="home-btn home-btn-primary">
+          <span class="home-btn-icon">🎯</span>
+          <span class="home-btn-label">選出シミュレータ</span>
+          <span class="home-btn-desc">最重要</span>
+        </div>
+        <div class="home-btn">
+          <span class="home-btn-icon">📋</span>
+          <span class="home-btn-label">パーティ管理</span>
+        </div>
+        <div class="home-btn">
+          <span class="home-btn-icon">🐾</span>
+          <span class="home-btn-label">ポケモン型管理</span>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+          <h3>自分のパーティ</h3>
+          <div class="party-row">
+            <span class="party-chip">ガブリアス</span>
+            <span class="party-chip">ハッサム</span>
+            <span class="party-chip">カバルドン</span>
+            <span class="party-chip">リザードン</span>
+            <span class="party-chip">ピカチュウ</span>
+            <span class="party-chip">バンギラス</span>
+          </div>
+          <h3>相手のパーティ</h3>
+          <div class="opp-grid">
+            <div class="opp-input">ゲンガー</div>
+            <div class="opp-input">ドラパルト</div>
+            <div class="opp-input">カイリュー</div>
+            <div class="opp-input">3: ___</div>
+            <div class="opp-input">4: ___</div>
+            <div class="opp-input">5: ___</div>
+          </div>
+          <button class="btn-primary">シミュレート</button>
+        </div>
+
+        <div class="result-card">
+          <div class="result-rank">🥇</div>
+          <div>
+            <div class="result-names">ガブリアス / リザードン<span class="badge-mega">メガ</span> / ハッサム</div>
+            <div class="result-score">78点 <span class="result-sub">カバレッジ60 + 詳細18</span></div>
+            <div class="cover-full">✅ 全カバー</div>
+          </div>
+        </div>
+
+        <div class="nav-bar">
+          <div class="nav-item active"><span class="nav-icon">🏠</span>ホーム</div>
+          <div class="nav-item"><span class="nav-icon">🎯</span>選出</div>
+          <div class="nav-item"><span class="nav-icon">📋</span>パーティ</div>
+          <div class="nav-item"><span class="nav-icon">⚙️</span>設定</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 案C -->
+    <div class="panel">
+      <div class="panel-label">案C：ブラックベース</div>
+      <div class="mock theme-c">
+        <div class="app-title">ポケバトルアシスト</div>
+        <div class="app-subtitle">チャンピオンズ 選出補助ツール</div>
+
+        <div class="home-btn home-btn-primary">
+          <span class="home-btn-icon">🎯</span>
+          <span class="home-btn-label">選出シミュレータ</span>
+          <span class="home-btn-desc">最重要</span>
+        </div>
+        <div class="home-btn">
+          <span class="home-btn-icon">📋</span>
+          <span class="home-btn-label">パーティ管理</span>
+        </div>
+        <div class="home-btn">
+          <span class="home-btn-icon">🐾</span>
+          <span class="home-btn-label">ポケモン型管理</span>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section">
+          <h3>自分のパーティ</h3>
+          <div class="party-row">
+            <span class="party-chip">ガブリアス</span>
+            <span class="party-chip">ハッサム</span>
+            <span class="party-chip">カバルドン</span>
+            <span class="party-chip">リザードン</span>
+            <span class="party-chip">ピカチュウ</span>
+            <span class="party-chip">バンギラス</span>
+          </div>
+          <h3>相手のパーティ</h3>
+          <div class="opp-grid">
+            <div class="opp-input">ゲンガー</div>
+            <div class="opp-input">ドラパルト</div>
+            <div class="opp-input">カイリュー</div>
+            <div class="opp-input">3: ___</div>
+            <div class="opp-input">4: ___</div>
+            <div class="opp-input">5: ___</div>
+          </div>
+          <button class="btn-primary">シミュレート</button>
+        </div>
+
+        <div class="result-card">
+          <div class="result-rank">🥇</div>
+          <div>
+            <div class="result-names">ガブリアス / リザードン<span class="badge-mega">メガ</span> / ハッサム</div>
+            <div class="result-score">78点 <span class="result-sub">カバレッジ60 + 詳細18</span></div>
+            <div class="cover-full">✅ 全カバー</div>
+          </div>
+        </div>
+
+        <div class="nav-bar">
+          <div class="nav-item active"><span class="nav-icon">🏠</span>ホーム</div>
+          <div class="nav-item"><span class="nav-icon">🎯</span>選出</div>
+          <div class="nav-item"><span class="nav-icon">📋</span>パーティ</div>
+          <div class="nav-item"><span class="nav-icon">⚙️</span>設定</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

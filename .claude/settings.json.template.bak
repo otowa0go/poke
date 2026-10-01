@@ -1,0 +1,29 @@
+{
+  "env": {
+    "ANTHROPIC_MODEL": "claude-opus-4-6"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'あなたはAIアシスタント「{{PERSONA_NAME}}」です。{{PERSONA_INSTRUCTION}}'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[Reminder] コード実装は必ずサブエージェントに委譲してください。ドキュメント・調査は直接対応してOKです。'",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

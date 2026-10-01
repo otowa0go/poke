@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls -R \"C:/Users/sfuruta/Desktop/poke\" --ignore=node_modules --ignore=data/*.json)"
+      "Bash(ls -R \"C:/Users/sfuruta/Desktop/poke\" --ignore=node_modules --ignore=data/*.json)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(node:*)",
+      "Bash(magick --version)",
+      "Bash(convert --version)",
+      "Bash(npm list:*)",
+      "Bash(mkdir -p /c/Users/otowa/project/poke/icons)",
+      "Bash(cp \"C:/Users/otowa/project/poke/追加用/IMG_1450.PNG\" /c/Users/otowa/project/poke/icons/icon-512.png)",
+      "Bash(cp \"C:/Users/otowa/project/poke/追加用/IMG_1450.PNG\" /c/Users/otowa/project/poke/icons/icon-192.png)",
+      "WebFetch(domain:gamewith.jp)",
+      "WebFetch(domain:altema.jp)"
     ]
   }
 }
